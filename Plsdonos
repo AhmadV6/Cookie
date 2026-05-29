@@ -223,7 +223,7 @@ local NUKE_LAND_POS  = Vector3.new(166.436, 6.485, 307.588)
 
 local function createLoadingScreen()
     local loadGui = Instance.new("ScreenGui")
-    loadGui.Name = "BiryukovLoader"
+    loadGui.Name = "BU IS RAT"
     loadGui.ResetOnSpawn = false
     loadGui.DisplayOrder = 99999
     loadGui.IgnoreGuiInset = true
@@ -600,7 +600,7 @@ local function createLoadingScreen()
         "Loading blast radius...",
         "Connecting detonator...",
         "Preparing shockwave...",
-        "Biryukov Nuke Loading..."
+        "BU is RAT Nuke Loading..."
     }
     local stepLbl = Instance.new("TextLabel", center)
     stepLbl.Size = UDim2.new(1,0,0,20)
@@ -1267,7 +1267,7 @@ addLiveDonationEntry = function(donorDisplayName, recipientRealName, amount)
 
         -- ── Fully transparent card container ──
         local clone = Instance.new("Frame")
-        clone.Name                   = "BiryukovDonCard"
+        clone.Name                   = "BU is Rat Card"
         clone.LayoutOrder            = -math.floor(tick())
         clone.Size                   = UDim2.new(1, -6, 0, CARD_H)
         clone.BackgroundTransparency = 1
