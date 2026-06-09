@@ -1,0 +1,1519 @@
+-- ts file was generated at discord.gg/25ms
+
+local fenv = getfenv()
+local _ = fenv._ENV
+local _ = _G.getfenv
+local _ = _G.setmetatable
+local _ = _G.rawget
+local _ = fenv.load
+
+loadstring([[local THEME = {
+    FrameBg     = Color3.fromRGB(38, 42, 56),
+    FrameBg2    = Color3.fromRGB(48, 52, 68),
+    Accent      = Color3.fromRGB(0, 180, 255),
+    AccentHover = Color3.fromRGB(0, 205, 255),
+    TabIdle     = Color3.fromRGB(70, 90, 130),
+    TabActive   = Color3.fromRGB(0, 180, 255),
+    ToggleBg    = Color3.fromRGB(60, 64, 80),
+    ToggleHover = Color3.fromRGB(70, 74, 95),
+    TextLight   = Color3.fromRGB(240, 240, 240),
+    TitleText   = Color3.fromRGB(255, 255, 255),
+    ErrorText   = Color3.fromRGB(255, 80, 80),
+}
+
+local CoreGui, TweenService = game:GetService("CoreGui"), game:GetService("TweenService")
+local UIS, Players = game:GetService("UserInputService"), game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player, playerGui = Players.LocalPlayer, Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local currentBalance, username = 76345714, player.Name
+local ROBUX_ICON = "rbxasset://textures/ui/common/robux@3x.png"
+
+local function fmt(n)
+    local s = tostring(math.floor(n))
+    return s:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
+local function parse(s) 
+    if not s or s == "" or type(s) ~= "string" then return nil end
+    local cleaned = s:gsub(",", ""):gsub("%s+", ""):gsub("R$", ""):gsub("Robux", ""):gsub("robux", "")
+    return tonumber(cleaned)
+end
+
+local function parseImageId(imageString)
+    if not imageString or imageString == "" then return nil end
+    if imageString:match("^rbxassetid://%d+$") then return imageString end
+    local id = imageString:match("rbxassetid://(%d+)")
+    if id then return "rbxassetid://" .. id end
+    if tonumber(imageString) then return "rbxassetid://" .. tonumber(imageString) end
+    id = imageString:match("[%?&]id=(%d+)")
+    if id then return "rbxassetid://" .. id end
+    id = imageString:match("assetId=(%d+)")
+    if id then return "rbxassetid://" .. id end
+    id = imageString:match("(%d+)")
+    if id then return "rbxassetid://" .. id end
+    return nil
+end
+
+local function getFirstWord(str)
+    if not str or str == "" then return "" end
+    return str:match("^(%S+)") or str
+end
+
+local function getTreadmillPriceByName(itemName)
+    if not itemName or itemName == "" then return 17000 end
+    local firstWord = getFirstWord(itemName)
+    if firstWord == "" then return 17000 end
+    local price = 17000
+    pcall(function()
+        local shopModal = playerGui:WaitForChild("SpeedGameUI"):WaitForChild("Modals"):WaitForChild("RobuxShopModal")
+        local scrollingFrame = shopModal:WaitForChild("ScrollingFrame")
+        local treadmills = scrollingFrame:WaitForChild("Treadmills")
+        local mainFrame = treadmills:WaitForChild("MainFrame")
+        local treadmillFrame = mainFrame:FindFirstChild(firstWord)
+        if not treadmillFrame then
+            treadmillFrame = mainFrame:FindFirstChild(firstWord .. "_Treadmill")
+            if not treadmillFrame then
+                treadmillFrame = mainFrame:FindFirstChild("Treadmill_" .. firstWord)
+                if not treadmillFrame then
+                    treadmillFrame = mainFrame:FindFirstChild(firstWord .. "Treadmill")
+                    if not treadmillFrame then
+                        treadmillFrame = mainFrame:FindFirstChild(firstWord .. "_Tredmill")
+                        if not treadmillFrame then
+                            treadmillFrame = mainFrame:FindFirstChild("Tredmill_" .. firstWord)
+                        end
+                    end
+                end
+            end
+        end
+        if not treadmillFrame then
+            for _, child in ipairs(mainFrame:GetChildren()) do
+                if child.Name:lower():find(firstWord:lower()) then
+                    treadmillFrame = child
+                    break
+                end
+            end
+        end
+        if treadmillFrame then
+            pcall(function()
+                local buyFrame = treadmillFrame:WaitForChild("Buy")
+                local priceLabel = buyFrame:WaitForChild("Price")
+                local parsed = parse(priceLabel.Text)
+                if parsed then price = parsed end
+            end)
+        end
+    end)
+    return price
+end
+
+local function SafeRequire(path)
+    local success, result = pcall(function() return require(path) end)
+    if success then return result else return nil end
+end
+
+local SoundManager = SafeRequire(ReplicatedStorage:WaitForChild("SoundManager", 5))
+local NotificationSystem = SafeRequire(ReplicatedStorage:WaitForChild("NotificationSystem", 5))
+
+local function CreateCustomNotification(text, color)
+    local parent = CoreGui or playerGui
+    local old = parent:FindFirstChild("GiftNotification9871")
+    if old then old:Destroy() end
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "GiftNotification9871"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 10009
+    screenGui.Parent = parent
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 340, 0, 50)
+    frame.Position = UDim2.new(0.5, -170, 0, -60)
+    frame.BackgroundColor3 = color or Color3.fromRGB(100, 255, 100)
+    frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 0.1
+    frame.Parent = screenGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text or "Gift sent!"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Parent = frame
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Parent = label
+    TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -170, 0, 20)}):Play()
+    task.delay(3, function()
+        local tweenOut = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -170, 0, -60)})
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+        screenGui:Destroy()
+    end)
+end
+
+local function PlayCustomSound(soundId)
+    local sound = Instance.new("Sound")
+    sound.SoundId = soundId or "rbxassetid://9114488953"
+    sound.Volume = 0.5
+    sound.Parent = player:WaitForChild("Character", 5) or workspace
+    sound:Play()
+    sound.Ended:Connect(function() sound:Destroy() end)
+end
+
+function PromptGiftNotification(giftText, color)
+    local text = giftText or "Gift sent!"
+    local notifColor = color or Color3.fromRGB(100, 255, 100)
+    if NotificationSystem and typeof(NotificationSystem.ShowGeneralNotification) == "function" then
+        pcall(function() NotificationSystem:ShowGeneralNotification(text, notifColor) end)
+    else
+        CreateCustomNotification(text, notifColor)
+    end
+    if SoundManager and typeof(SoundManager.Play) == "function" then
+        pcall(function() SoundManager:Play("NOTIF1") end)
+    else
+        PlayCustomSound("rbxassetid://9114488953")
+    end
+end
+
+local function closeGameGiftModal()
+    pcall(function()
+        local modal = playerGui:WaitForChild("SpeedGameUI"):WaitForChild("Modals"):WaitForChild("GiftToPlayerModal")
+        if not modal then return end
+        local header = modal:FindFirstChild("Header")
+        if not header then return end
+        local closeBtn = header:FindFirstChild("CloseButton")
+        if not closeBtn then return end
+        if getconnections then
+            for _, conn in ipairs(getconnections(closeBtn.MouseButton1Click)) do pcall(function() conn:Fire() end) end
+            for _, conn in ipairs(getconnections(closeBtn.Activated)) do pcall(function() conn:Fire() end) end
+            return
+        end
+    end)
+end
+
+local function showCompleted(target, giftMessage, itemName)
+    local displayName = itemName or "Admin Treadmill"
+
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "PurchaseCompleted"
+    sg.Parent = playerGui
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.IgnoreGuiInset = true
+    sg.DisplayOrder = 10007
+    sg.ResetOnSpawn = false
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.Position = UDim2.new(0, 0, 0, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BackgroundTransparency = 1
+    bg.BorderSizePixel = 0
+    bg.ZIndex = 1
+    bg.Parent = sg
+
+    local trap = Instance.new("TextButton")
+    trap.BackgroundTransparency = 1
+    trap.Size = UDim2.new(1, 0, 1, 0)
+    trap.Position = UDim2.new(0, 0, 0, 0)
+    trap.Text = ""
+    trap.ZIndex = 2
+    trap.Parent = bg
+
+    local modal = Instance.new("Frame")
+    modal.Size = UDim2.new(0, 400, 0, 220)
+    modal.Position = UDim2.new(0.5, 0, 0.5, 0)
+    modal.AnchorPoint = Vector2.new(0.5, 0.5)
+    modal.BackgroundColor3 = Color3.fromRGB(31, 32, 36)
+    modal.BorderSizePixel = 0
+    modal.ZIndex = 3
+    modal.Parent = sg
+    Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 16)
+
+    local uiSizeConstraint = Instance.new("UISizeConstraint")
+    uiSizeConstraint.MaxSize = Vector2.new(420, 9999)
+    uiSizeConstraint.MinSize = Vector2.new(280, 0)
+    uiSizeConstraint.Parent = modal
+
+    local title = Instance.new("TextLabel")
+    title.Text = "Purchase completed"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 20
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Position = UDim2.new(0, 20, 0, 16)
+    title.Size = UDim2.new(1, -60, 0, 26)
+    title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    title.BackgroundTransparency = 1
+    title.ZIndex = 4
+    title.Parent = modal
+
+    local close = Instance.new("TextButton")
+    close.Position = UDim2.new(1, -16, 0, 14)
+    close.AnchorPoint = Vector2.new(1, 0)
+    close.Size = UDim2.fromOffset(26, 26)
+    close.Text = "X"
+    close.Font = Enum.Font.GothamBold
+    close.TextSize = 18
+    close.BackgroundTransparency = 1
+    close.TextColor3 = Color3.fromRGB(180, 180, 180)
+    close.ZIndex = 5
+    close.Parent = modal
+
+    local iconCont = Instance.new("Frame")
+    iconCont.Size = UDim2.fromOffset(56, 56)
+    iconCont.Position = UDim2.new(0.5, 0, 0, 58)
+    iconCont.AnchorPoint = Vector2.new(0.5, 0)
+    iconCont.BackgroundTransparency = 1
+    iconCont.ZIndex = 4
+    iconCont.Parent = modal
+
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.fromScale(1, 1)
+    circle.BackgroundTransparency = 1
+    circle.Parent = iconCont
+    Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+    local cStroke = Instance.new("UIStroke")
+    cStroke.Thickness = 2.5
+    cStroke.Color = Color3.fromRGB(200, 200, 200)
+    cStroke.Parent = circle
+
+    local check = Instance.new("ImageLabel")
+    check.Size = UDim2.fromScale(0.6, 0.6)
+    check.Position = UDim2.fromScale(0.5, 0.5)
+    check.AnchorPoint = Vector2.new(0.5, 0.5)
+    check.BackgroundTransparency = 1
+    check.Image = "rbxassetid://3944680095"
+    check.ImageColor3 = Color3.fromRGB(200, 200, 200)
+    check.ZIndex = 5
+    check.Parent = iconCont
+
+    local desc = Instance.new("TextLabel")
+    desc.Text = "You have successfully bought " .. displayName .. " - Gift."
+    desc.Font = Enum.Font.GothamMedium
+    desc.TextSize = 14
+    desc.TextWrapped = true
+    desc.Position = UDim2.new(0, 20, 0, 122)
+    desc.Size = UDim2.new(1, -40, 0, 40)
+    desc.TextXAlignment = Enum.TextXAlignment.Center
+    desc.TextYAlignment = Enum.TextYAlignment.Center
+    desc.TextColor3 = Color3.fromRGB(180, 180, 180)
+    desc.BackgroundTransparency = 1
+    desc.ZIndex = 4
+    desc.Parent = modal
+
+    local okBtn = Instance.new("TextButton")
+    okBtn.Size = UDim2.new(1, -40, 0, 40)
+    okBtn.Position = UDim2.new(0, 20, 0, 168)
+    okBtn.Text = "OK"
+    okBtn.Font = Enum.Font.GothamBold
+    okBtn.TextSize = 15
+    okBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    okBtn.TextColor3 = Color3.new(1, 1, 1)
+    okBtn.AutoButtonColor = false
+    okBtn.ZIndex = 4
+    Instance.new("UICorner", okBtn).CornerRadius = UDim.new(0, 10)
+    okBtn.Parent = modal
+
+    TweenService:Create(bg, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.45}):Play()
+    TweenService:Create(modal, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+
+    local function close()
+        TweenService:Create(bg, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(modal, TweenInfo.new(0.2), {Position = UDim2.new(0.5, 0, 0.45, 0)}):Play()
+        task.delay(0.22, function()
+            sg:Destroy()
+            closeGameGiftModal()
+            if giftMessage and giftMessage ~= "" then
+                PromptGiftNotification(giftMessage, Color3.fromRGB(100, 255, 100))
+            end
+        end)
+    end
+
+    okBtn.MouseButton1Click:Connect(close)
+    close.MouseButton1Click:Connect(close)
+    trap.MouseButton1Click:Connect(close)
+end
+
+local function createPurchaseModal(target, giftMessage, itemImage, itemName)
+    local price = getTreadmillPriceByName(itemName)
+    local newBal = currentBalance - price
+    local displayName = itemName or "Admin Treadmill"
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "PurchaseModal"
+    screenGui.Parent = playerGui
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.IgnoreGuiInset = true
+    screenGui.DisplayOrder = 10007
+    screenGui.ResetOnSpawn = false
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.Position = UDim2.new(0, 0, 0, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BackgroundTransparency = 1
+    bg.BorderSizePixel = 0
+    bg.ZIndex = 1
+    bg.Parent = screenGui
+
+    local trap = Instance.new("TextButton")
+    trap.BackgroundTransparency = 1
+    trap.Size = UDim2.new(1, 0, 1, 0)
+    trap.Position = UDim2.new(0, 0, 0, 0)
+    trap.Text = ""
+    trap.ZIndex = 2
+    trap.Parent = bg
+
+    local modal = Instance.new("Frame")
+    modal.Size = UDim2.new(0, 400, 0, 180)
+    modal.Position = UDim2.new(0.5, 0, 0.5, 0)
+    modal.AnchorPoint = Vector2.new(0.5, 0.5)
+    modal.BackgroundColor3 = Color3.fromRGB(31, 32, 36)
+    modal.BorderSizePixel = 0
+    modal.ZIndex = 3
+    modal.Parent = screenGui
+    Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 16)
+
+    local uiSizeConstraint = Instance.new("UISizeConstraint")
+    uiSizeConstraint.MaxSize = Vector2.new(420, 9999)
+    uiSizeConstraint.MinSize = Vector2.new(280, 0)
+    uiSizeConstraint.Parent = modal
+
+    local title = Instance.new("TextLabel")
+    title.Position = UDim2.new(0, 18, 0, 14)
+    title.Size = UDim2.new(0, 100, 0, 24)
+    title.Text = "Buy item"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    title.ZIndex = 4
+    title.Parent = modal
+
+    local balHolder = Instance.new("Frame")
+    balHolder.Position = UDim2.new(1, -50, 0, 14)
+    balHolder.AnchorPoint = Vector2.new(1, 0)
+    balHolder.Size = UDim2.fromOffset(0, 24)
+    balHolder.AutomaticSize = Enum.AutomaticSize.X
+    balHolder.BackgroundTransparency = 1
+    balHolder.ZIndex = 4
+    balHolder.Parent = modal
+
+    local balIcon = Instance.new("ImageLabel")
+    balIcon.Size = UDim2.fromOffset(18, 18)
+    balIcon.Position = UDim2.fromOffset(0, 3)
+    balIcon.Image = ROBUX_ICON
+    balIcon.BackgroundTransparency = 1
+    balIcon.ZIndex = 5
+    balIcon.Parent = balHolder
+
+    local balText = Instance.new("TextLabel")
+    balText.Position = UDim2.fromOffset(20, 0)
+    balText.Size = UDim2.new(0, 0, 1, 0)
+    balText.AutomaticSize = Enum.AutomaticSize.X
+    balText.Text = fmt(currentBalance)
+    balText.Font = Enum.Font.GothamBold
+    balText.TextSize = 14
+    balText.TextXAlignment = Enum.TextXAlignment.Left
+    balText.BackgroundTransparency = 1
+    balText.TextColor3 = Color3.fromRGB(230, 230, 230)
+    balText.ZIndex = 5
+    balText.Parent = balHolder
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Position = UDim2.new(1, -14, 0, 12)
+    closeBtn.AnchorPoint = Vector2.new(1, 0)
+    closeBtn.Size = UDim2.fromOffset(24, 24)
+    closeBtn.Text = "X"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 16
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    closeBtn.ZIndex = 5
+    closeBtn.Parent = modal
+
+    local itemRow = Instance.new("Frame")
+    itemRow.Position = UDim2.new(0, 18, 0, 48)
+    itemRow.Size = UDim2.new(1, -36, 0, 60)
+    itemRow.BackgroundTransparency = 1
+    itemRow.ZIndex = 4
+    itemRow.Parent = modal
+
+    local itemImg = Instance.new("ImageLabel")
+    itemImg.Size = UDim2.fromOffset(56, 56)
+    itemImg.Position = UDim2.fromOffset(0, 2)
+    itemImg.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    local parsedImage = parseImageId(itemImage)
+    itemImg.Image = parsedImage or "rbxassetid://139607718"
+    itemImg.ZIndex = 5
+    itemImg.Parent = itemRow
+    Instance.new("UICorner", itemImg).CornerRadius = UDim.new(0, 10)
+
+    local itemNameLabel = Instance.new("TextLabel")
+    itemNameLabel.Position = UDim2.new(0, 68, 0, 8)
+    itemNameLabel.Size = UDim2.new(1, -76, 0, 22)
+    itemNameLabel.Text = displayName .. " - Gift"
+    itemNameLabel.Font = Enum.Font.GothamBold
+    itemNameLabel.TextSize = 15
+    itemNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    itemNameLabel.BackgroundTransparency = 1
+    itemNameLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    itemNameLabel.ZIndex = 5
+    itemNameLabel.Parent = itemRow
+
+    local itemPriceRow = Instance.new("Frame")
+    itemPriceRow.Position = UDim2.new(0, 68, 0, 34)
+    itemPriceRow.Size = UDim2.fromOffset(120, 20)
+    itemPriceRow.BackgroundTransparency = 1
+    itemPriceRow.ZIndex = 5
+    itemPriceRow.Parent = itemRow
+
+    local itemPriceIcon = Instance.new("ImageLabel")
+    itemPriceIcon.Size = UDim2.fromOffset(16, 16)
+    itemPriceIcon.Position = UDim2.fromOffset(0, 2)
+    itemPriceIcon.Image = ROBUX_ICON
+    itemPriceIcon.BackgroundTransparency = 1
+    itemPriceIcon.ZIndex = 6
+    itemPriceIcon.Parent = itemPriceRow
+
+    local itemPriceText = Instance.new("TextLabel")
+    itemPriceText.Position = UDim2.fromOffset(18, 0)
+    itemPriceText.Size = UDim2.new(1, -18, 1, 0)
+    itemPriceText.Text = fmt(price)
+    itemPriceText.Font = Enum.Font.GothamBold
+    itemPriceText.TextSize = 14
+    itemPriceText.TextXAlignment = Enum.TextXAlignment.Left
+    itemPriceText.BackgroundTransparency = 1
+    itemPriceText.TextColor3 = Color3.fromRGB(240, 240, 240)
+    itemPriceText.ZIndex = 6
+    itemPriceText.Parent = itemPriceRow
+
+    local buyBtn = Instance.new("TextButton")
+    buyBtn.Position = UDim2.new(0, 18, 0, 122)
+    buyBtn.Size = UDim2.new(1, -36, 0, 40)
+    buyBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 140)
+    buyBtn.AutoButtonColor = false
+    buyBtn.Text = ""
+    buyBtn.ClipsDescendants = true
+    buyBtn.ZIndex = 4
+    buyBtn.Parent = modal
+    Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 10)
+
+    local filler = Instance.new("Frame")
+    filler.Size = UDim2.new(0, 0, 1, 0)
+    filler.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    filler.BorderSizePixel = 0
+    filler.ZIndex = 2
+    filler.Parent = buyBtn
+    Instance.new("UICorner", filler).CornerRadius = UDim.new(0, 10)
+
+    local buyLabel = Instance.new("TextLabel")
+    buyLabel.Size = UDim2.new(1, 0, 1, 0)
+    buyLabel.BackgroundTransparency = 1
+    buyLabel.Text = "Buy"
+    buyLabel.Font = Enum.Font.GothamBold
+    buyLabel.TextSize = 15
+    buyLabel.TextColor3 = Color3.new(1, 1, 1)
+    buyLabel.ZIndex = 3
+    buyLabel.Parent = buyBtn
+
+    local busy = false
+    local preLoaded = false
+
+    TweenService:Create(bg, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.45}):Play()
+    TweenService:Create(modal, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+
+    task.spawn(function()
+        task.wait(0.25)
+        if not filler or not filler.Parent then return end
+        local tw = TweenService:Create(filler, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 1, 0)})
+        tw:Play()
+        tw.Completed:Wait()
+        if not buyBtn or not buyBtn.Parent then return end
+        preLoaded = true
+    end)
+
+    local function closeBuy()
+        busy = false
+        preLoaded = true
+        TweenService:Create(bg, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(modal, TweenInfo.new(0.2), {Position = UDim2.new(0.5, 0, 0.45, 0)}):Play()
+        task.delay(0.22, function()
+            screenGui:Destroy()
+        end)
+    end
+
+    closeBtn.MouseButton1Click:Connect(closeBuy)
+    trap.MouseButton1Click:Connect(closeBuy)
+
+    buyBtn.MouseButton1Click:Connect(function()
+        if not preLoaded or busy then return end
+        busy = true
+        currentBalance = math.max(0, currentBalance - price)
+        balText.Text = fmt(currentBalance)
+        closeBuy()
+        task.delay(0.3, function()
+            showCompleted(target, giftMessage, displayName)
+            busy = false
+        end)
+    end)
+end
+
+local function hookGameUIButton()
+    local success, modal = pcall(function()
+        return playerGui:WaitForChild("SpeedGameUI"):WaitForChild("Modals"):WaitForChild("GiftToPlayerModal")
+    end)
+    if not success or not modal then return end
+
+    local mainFrame = modal:WaitForChild("MainFrame")
+    local sendBtnFrame = mainFrame:WaitForChild("SendGiftButtonFrame")
+    local sendBtn = sendBtnFrame:WaitForChild("SendGiftButton")
+    local textboxFrame = mainFrame:WaitForChild("TextboxFrame")
+    local usernameInput = textboxFrame:WaitForChild("UsernameInput")
+
+    if sendBtn:FindFirstChild("CustomGiftOverlay") then return end
+
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "CustomGiftOverlay"
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.ZIndex = (sendBtn.ZIndex or 1) + 50
+    overlay.Parent = sendBtn
+
+    overlay.MouseButton1Click:Connect(function()
+        local targetName = ""
+        pcall(function()
+            targetName = usernameInput.Text
+        end)
+        if targetName == "" then targetName = "someone" end
+
+        local rawImage = nil
+        local rawName = nil
+        pcall(function()
+            local contentFrame = mainFrame:WaitForChild("ContentFrame")
+            local itemFrame = contentFrame:WaitForChild("ItemFrame")
+            local itemImage = itemFrame:WaitForChild("ItemImage")
+            rawImage = itemImage.Image
+            
+            local itemNameBg = itemFrame:WaitForChild("ItemNameBg")
+            local itemNameLabel = itemNameBg:WaitForChild("ItemNameLabel")
+            rawName = itemNameLabel.Text
+        end)
+
+        local giftMessage = "Gift sent to " .. targetName .. "!"
+        createPurchaseModal(targetName, giftMessage, rawImage, rawName)
+    end)
+end
+
+task.spawn(function()
+    task.wait(2)
+    hookGameUIButton()
+end)
+
+player.CharacterAdded:Connect(function()
+    task.wait(2)
+    hookGameUIButton()
+end)
+
+playerGui.DescendantAdded:Connect(function(desc)
+    if desc.Name == "SendGiftButton" and desc.Parent and desc.Parent.Name == "SendGiftButtonFrame" then
+        task.delay(0.5, hookGameUIButton)
+    end
+end)
+
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        pcall(function()
+            local btn = playerGui:WaitForChild("SpeedGameUI"):WaitForChild("Frames"):WaitForChild("RightFrame"):WaitForChild("ButtonsFrame"):WaitForChild("x2speedbutton")
+            if btn then
+                if getconnections then
+                    for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do
+                        pcall(function() conn:Fire() end)
+                    end
+                    for _, conn in ipairs(getconnections(btn.Activated)) do
+                        pcall(function() conn:Fire() end)
+                    end
+                else
+                    pcall(function() btn.MouseButton1Click:Fire() end)
+                    pcall(function() btn.Activated:Fire() end)
+                end
+            end
+        end)
+    end
+end)
+
+local processedBooths = {}
+
+local function getId(obj)
+    for name, val in pairs(obj:GetAttributes()) do
+        if (name:lower():find("id") or name:lower():find("asset")) and type(val) == "number" then return val end
+    end
+    for _, c in ipairs(obj:GetChildren()) do
+        if (c.Name:lower():find("id") or c.Name:lower():find("asset")) and (c:IsA("NumberValue") or c:IsA("IntValue")) then return c.Value end
+    end
+    if tonumber(obj.Name) then return tonumber(obj.Name) end
+    local id = obj.Name:match("Item(%d+)")
+    if id then return tonumber(id) end
+    if obj.Parent then
+        local pid = obj.Parent.Name:match("Item(%d+)")
+        if pid then return tonumber(pid) end
+    end
+    return nil
+end
+
+local function getProductInfo(id)
+    local ok, info = pcall(function() return MarketplaceService:GetProductInfo(id, Enum.InfoType.GamePass) end)
+    if ok and info then
+        return {Name = info.Name or "Unknown", IconImageAssetId = id, PriceInRobux = info.PriceInRobux or 0, AssetId = id}
+    end
+    return {Name = "Unknown", IconImageAssetId = id, PriceInRobux = 0, AssetId = id}
+end
+
+local function getBoothUser(frame)
+    local ok, result = pcall(function()
+        for _, c in ipairs(frame:GetDescendants()) do
+            if c:IsA("TextLabel") or c:IsA("TextButton") then
+                local text = c.Text
+                if text and text:find("@") then
+                    local match = text:match("@([%w_]+)")
+                    if match then return match end
+                end
+            end
+        end
+        return nil
+    end)
+    return ok and result or nil
+end
+
+local function hookBoothBtn(btn)
+    if not (btn:IsA("TextButton") or btn:IsA("ImageButton")) then return end
+    if processedBooths[btn] then return end
+    if btn:FindFirstChild("CustomPurchaseOverlay") then return end
+    local id = getId(btn)
+    if not id then return end
+    
+    processedBooths[btn] = true
+    
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "CustomPurchaseOverlay"
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.ZIndex = (btn.ZIndex or 1) + 10
+    overlay.Parent = btn
+    
+    overlay.MouseButton1Click:Connect(function()
+        local cid = getId(btn) or id
+        local info = getProductInfo(cid)
+        local boothUser = getBoothUser(btn) or username
+        createPurchaseModal(boothUser)
+    end)
+end
+
+task.spawn(function()
+    task.wait(5)
+    pcall(function()
+        for _, obj in ipairs(playerGui:GetDescendants()) do
+            if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+                local parentName = ""
+                if obj.Parent then parentName = obj.Parent.Name:lower() end
+                if parentName:find("booth") or parentName:find("shop") or parentName:find("store") or parentName:find("item") then
+                    hookBoothBtn(obj)
+                end
+            end
+        end
+    end)
+end)
+
+pcall(function()
+    local old
+    old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        if self == MarketplaceService and (method == "PromptGamePassPurchase" or method == "PromptProductPurchase" or method == "PromptPurchase") then return end
+        return old(self, ...)
+    end))
+end)
+
+for _, n in ipairs({"FaDhenModernMini", "Cmdr"}) do
+    local old = CoreGui:FindFirstChild(n)
+    if old then old:Destroy() end
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name, gui.ResetOnSpawn, gui.Parent = "Cmdr", false, CoreGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size, mainFrame.Position, mainFrame.BackgroundColor3, mainFrame.Active, mainFrame.Draggable, mainFrame.Visible =
+    UDim2.new(0, 200, 0, 195), UDim2.new(0.5, -100, 0.5, -97), THEME.FrameBg, true, true, false
+mainFrame.Parent = gui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+
+local mStroke = Instance.new("UIStroke")
+mStroke.Thickness, mStroke.Color, mStroke.Transparency = 2, THEME.Accent, 0.15
+mStroke.Parent = mainFrame
+
+local shadow = Instance.new("ImageLabel")
+shadow.AnchorPoint, shadow.Position, shadow.Size, shadow.ZIndex, shadow.BackgroundTransparency, shadow.Image, shadow.ImageColor3, shadow.ImageTransparency, shadow.ScaleType, shadow.SliceCenter =
+    Vector2.new(0.5, 0.5), UDim2.new(0.5, 0, 0.5, 0), UDim2.new(1, 36, 1, 36), 0, 1, "rbxassetid://5028857084", Color3.new(0, 0, 0), 0.55, Enum.ScaleType.Slice, Rect.new(24, 24, 276, 276)
+shadow.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size, title.BackgroundColor3, title.Text, title.Font, title.TextSize, title.TextXAlignment, title.TextColor3, title.Parent =
+    UDim2.new(1, 0, 0, 32), THEME.Accent, "  Scriptblox 9871", Enum.Font.GothamBold, 14, Enum.TextXAlignment.Left, THEME.TitleText, mainFrame
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+local tGrad = Instance.new("UIGradient")
+tGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, THEME.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 60, 255))}
+tGrad.Rotation = 80
+tGrad.Parent = title
+
+local content = Instance.new("Frame")
+content.Position, content.Size, content.BackgroundTransparency = UDim2.new(0, 10, 0, 38), UDim2.new(1, -20, 1, -48), 1
+content.Parent = mainFrame
+
+local mainTab = Instance.new("Frame")
+mainTab.Name, mainTab.Size, mainTab.BackgroundTransparency, mainTab.Visible, mainTab.Parent = "MainTab", UDim2.new(1, 0, 1, 0), 1, true, content
+
+local layout = Instance.new("UIListLayout")
+layout.Padding, layout.VerticalAlignment, layout.HorizontalAlignment, layout.SortOrder = UDim.new(0, 6), Enum.VerticalAlignment.Top, Enum.HorizontalAlignment.Center, Enum.SortOrder.LayoutOrder
+layout.Parent = mainTab
+
+local function makeLabel(text, order)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size, lbl.Position, lbl.BackgroundTransparency, lbl.Text, lbl.TextColor3, lbl.Font, lbl.TextSize, lbl.TextXAlignment, lbl.LayoutOrder =
+        UDim2.new(1, -10, 0, 16), UDim2.new(0, 5, 0, 2), 1, text, Color3.fromRGB(115, 100, 150), Enum.Font.GothamBold, 10, Enum.TextXAlignment.Left, order
+    lbl.Parent = mainTab
+    return lbl
+end
+
+makeLabel("FAKE BALANCE", 1)
+
+local balInput = Instance.new("TextBox")
+balInput.Size, balInput.Position, balInput.BackgroundColor3, balInput.Text, balInput.TextColor3, balInput.Font, balInput.TextSize, balInput.PlaceholderText, balInput.PlaceholderColor3, balInput.ClearTextOnFocus, balInput.LayoutOrder =
+    UDim2.new(1, -10, 0, 32), UDim2.new(0, 5, 0, 20), Color3.fromRGB(20, 18, 30), fmt(currentBalance), Color3.fromRGB(220, 215, 240), Enum.Font.Gotham, 13, "Enter balance...", Color3.fromRGB(80, 72, 108), false, 2
+balInput.Parent = mainTab
+Instance.new("UICorner", balInput).CornerRadius = UDim.new(0, 9)
+
+local biStroke = Instance.new("UIStroke", balInput)
+biStroke.Color, biStroke.Thickness = Color3.fromRGB(45, 40, 68), 1
+
+balInput.Focused:Connect(function()
+    TweenService:Create(biStroke, TweenInfo.new(0.15), {Color = THEME.Accent, Thickness = 1.5}):Play()
+end)
+balInput.FocusLost:Connect(function()
+    TweenService:Create(biStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(45, 40, 68), Thickness = 1}):Play()
+end)
+
+local applyBtn = Instance.new("TextButton")
+applyBtn.Size, applyBtn.Position, applyBtn.BackgroundColor3, applyBtn.Text, applyBtn.TextColor3, applyBtn.Font, applyBtn.TextSize, applyBtn.AutoButtonColor, applyBtn.LayoutOrder =
+    UDim2.new(1, -10, 0, 32), UDim2.new(0, 5, 0, 56), Color3.fromRGB(88, 66, 188), "Apply Changes", Color3.new(1, 1, 1), Enum.Font.GothamBold, 13, false, 3
+applyBtn.Parent = mainTab
+Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0, 10)
+
+applyBtn.MouseEnter:Connect(function()
+    TweenService:Create(applyBtn, TweenInfo.new(0.13), {BackgroundColor3 = Color3.fromRGB(108, 86, 210)}):Play()
+end)
+applyBtn.MouseLeave:Connect(function()
+    TweenService:Create(applyBtn, TweenInfo.new(0.13), {BackgroundColor3 = Color3.fromRGB(88, 66, 188)}):Play()
+end)
+
+applyBtn.MouseButton1Click:Connect(function()
+    local inputText = balInput.Text
+    local nb = parse(inputText)
+    if nb and type(nb) == "number" and nb >= 0 then
+        currentBalance = math.floor(nb)
+        balInput.Text = fmt(currentBalance)
+        TweenService:Create(applyBtn, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(52, 168, 90)}):Play()
+        applyBtn.Text = "Applied!"
+        task.delay(1.4, function()
+            TweenService:Create(applyBtn, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(88, 66, 188)}):Play()
+            applyBtn.Text = "Apply Changes"
+        end)
+    else
+        TweenService:Create(applyBtn, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+        applyBtn.Text = "Invalid!"
+        task.delay(1.0, function()
+            TweenService:Create(applyBtn, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(88, 66, 188)}):Play()
+            applyBtn.Text = "Apply Changes"
+        end)
+    end
+end)
+
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+local toggleBtn = Instance.new("ImageButton", gui)
+toggleBtn.Size, toggleBtn.Position, toggleBtn.Image, toggleBtn.BackgroundColor3, toggleBtn.BackgroundTransparency, toggleBtn.Active, toggleBtn.Draggable =
+    UDim2.new(0, 55, 0, 55), UDim2.new(0, 10, 0.2, 0), "rbxassetid://88985860242479", Color3.fromRGB(255, 255, 255), 0.7, true, true
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 9)
+
+local tStroke = Instance.new("UIStroke")
+tStroke.Thickness, tStroke.Color, tStroke.Transparency = 2, Color3.fromRGB(255, 255, 255), 0.3
+tStroke.Parent = toggleBtn
+
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+end)
+toggleBtn.MouseLeave:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+
+local isOpen = false
+toggleBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    mainFrame.Visible = isOpen
+end)
+
+local introGui = Instance.new("ScreenGui")
+introGui.Name = "GhemsHUB"
+introGui.ResetOnSpawn = false
+introGui.IgnoreGuiInset = true
+introGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+introGui.DisplayOrder = 10000
+introGui.Parent = CoreGui
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+bg.BorderSizePixel = 0
+bg.Parent = introGui
+
+local card = Instance.new("Frame")
+card.Size = UDim2.fromOffset(380, 230)
+card.Position = UDim2.fromScale(0.5, 0.55)
+card.AnchorPoint = Vector2.new(0.5, 0.5)
+card.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+card.BorderSizePixel = 0
+card.BackgroundTransparency = 1
+card.Parent = bg
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 16)
+
+local cStroke = Instance.new("UIStroke")
+cStroke.Color = THEME.Accent
+cStroke.Transparency = 1
+cStroke.Thickness = 2
+cStroke.Parent = card
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 4)
+topBar.Position = UDim2.new(0, 0, 0, 0)
+topBar.BackgroundColor3 = THEME.Accent
+topBar.BorderSizePixel = 0
+topBar.BackgroundTransparency = 1
+topBar.Parent = card
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 16)
+
+local tGrad = Instance.new("UIGradient")
+tGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, THEME.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 60, 255))}
+tGrad.Parent = topBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 14)
+title.BackgroundTransparency = 1
+title.Text = "made by Ghems"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 28
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextTransparency = 1
+title.Parent = card
+
+local keybindText = Instance.new("TextLabel")
+keybindText.Size = UDim2.new(1, -20, 0, 36)
+keybindText.Position = UDim2.new(0, 10, 0, 56)
+keybindText.BackgroundTransparency = 1
+keybindText.Text = "Shop Keybind = K"
+keybindText.TextColor3 = THEME.Accent
+keybindText.TextSize = 22
+keybindText.Font = Enum.Font.GothamBold
+keybindText.TextXAlignment = Enum.TextXAlignment.Center
+keybindText.TextTransparency = 1
+keybindText.Parent = card
+
+local link = Instance.new("TextLabel")
+link.Size = UDim2.new(1, -20, 0, 20)
+link.Position = UDim2.new(0, 10, 0, 100)
+link.BackgroundTransparency = 1
+link.Text = "GhemsHUB"
+link.TextColor3 = THEME.Accent
+link.TextSize = 14
+link.Font = Enum.Font.GothamMedium
+link.TextXAlignment = Enum.TextXAlignment.Center
+link.TextTransparency = 1
+link.Parent = card
+
+local sub = Instance.new("TextLabel")
+sub.Size = UDim2.new(1, -20, 0, 18)
+sub.Position = UDim2.new(0, 10, 0, 160)
+sub.BackgroundTransparency = 1
+sub.Text = "loading..."
+sub.TextColor3 = Color3.fromRGB(120, 120, 140)
+sub.TextSize = 12
+sub.Font = Enum.Font.Gotham
+sub.TextXAlignment = Enum.TextXAlignment.Center
+sub.TextTransparency = 1
+sub.Parent = card
+
+TweenService:Create(card, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 0}):Play()
+TweenService:Create(cStroke, TweenInfo.new(0.5), {Transparency = 0.2}):Play()
+TweenService:Create(topBar, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+
+task.delay(0.3, function() TweenService:Create(title, TweenInfo.new(0.4), {TextTransparency = 0}):Play() end)
+task.delay(0.5, function() TweenService:Create(keybindText, TweenInfo.new(0.4), {TextTransparency = 0}):Play() end)
+task.delay(0.7, function() TweenService:Create(link, TweenInfo.new(0.4), {TextTransparency = 0}):Play() end)
+task.delay(0.9, function() TweenService:Create(sub, TweenInfo.new(0.4), {TextTransparency = 0}):Play() end)
+
+task.delay(2.0, function()
+    sub.Text = "ready!"
+    TweenService:Create(sub, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
+end)
+
+task.delay(3.0, function()
+    TweenService:Create(sub, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+    TweenService:Create(link, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+end)
+
+task.delay(3.2, function()
+    TweenService:Create(keybindText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+end)
+
+task.delay(3.5, function()
+    TweenService:Create(title, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+end)
+
+task.delay(3.8, function()
+    TweenService:Create(cStroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
+    TweenService:Create(topBar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.fromScale(0.5, 0.4), BackgroundTransparency = 1}):Play()
+end)
+
+task.delay(4.2, function()
+    TweenService:Create(bg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+end)
+
+task.delay(4.6, function()
+    introGui:Destroy()
+end)]])
+Color3.fromRGB(48, 52, 68)
+
+local _call10 = Color3.fromRGB(0, 180, 255)
+
+Color3.fromRGB(0, 205, 255)
+Color3.fromRGB(70, 90, 130)
+Color3.fromRGB(0, 180, 255)
+Color3.fromRGB(60, 64, 80)
+Color3.fromRGB(70, 74, 95)
+Color3.fromRGB(240, 240, 240)
+Color3.fromRGB(255, 80, 80)
+
+local _call28 = game:GetService('CoreGui')
+local _call30 = game:GetService('TweenService')
+local _call32 = game:GetService('UserInputService')
+local _call34 = game:GetService('Players')
+local _call36 = game:GetService('MarketplaceService')
+local _call38 = game:GetService('ReplicatedStorage')
+local _LocalPlayer39 = _call34.LocalPlayer
+local _call42 = _call34.LocalPlayer:WaitForChild('PlayerGui')
+local _ = _LocalPlayer39.Name
+
+require(_call38:WaitForChild('SoundManager', 5))
+require(_call38:WaitForChild('NotificationSystem', 5))
+task.spawn(function()
+    task.wait(2)
+
+    local _call60 = _call42:WaitForChild('SpeedGameUI'):WaitForChild('Modals'):WaitForChild('GiftToPlayerModal'):WaitForChild('MainFrame')
+    local _call64 = _call60:WaitForChild('SendGiftButtonFrame'):WaitForChild('SendGiftButton')
+
+    _call60:WaitForChild('TextboxFrame'):WaitForChild('UsernameInput')
+    _call64:FindFirstChild('CustomGiftOverlay')
+end)
+_LocalPlayer39.CharacterAdded:Connect(function()
+    task.wait(2)
+
+    local _call82 = _call42:WaitForChild('SpeedGameUI'):WaitForChild('Modals'):WaitForChild('GiftToPlayerModal'):WaitForChild('MainFrame')
+    local _call86 = _call82:WaitForChild('SendGiftButtonFrame'):WaitForChild('SendGiftButton')
+
+    _call82:WaitForChild('TextboxFrame'):WaitForChild('UsernameInput')
+    _call86:FindFirstChild('CustomGiftOverlay')
+end)
+_call42.DescendantAdded:Connect(function(_96)
+    local _ = _96.Name
+end)
+_call32.InputBegan:Connect(function(_101, _101_2) end)
+task.spawn(function()
+    task.wait(5)
+
+    for _107, _107_2 in ipairs(_call42:GetDescendants())do
+        _107_2:IsA('TextButton')
+
+        local _ = _107_2.Parent
+
+        _107_2.Parent.Name:lower():find('booth')
+        _107_2:IsA('TextButton')
+        _107_2:FindFirstChild('CustomPurchaseOverlay')
+    end
+end)
+newcclosure(function(_121, ...)
+    getnamecallmethod()
+
+    local _ = _121 == _call36
+
+    error('[string "25ms_loadstring"]:729: attempt to call a nil value')
+end)
+hookmetamethod(game, '__namecall', function(...)
+    local _125_vararg1 = ...
+
+    getnamecallmethod()
+
+    local _ = _125_vararg1 == _call36
+
+    error('[string "25ms_loadstring"]:729: attempt to call a nil value')
+end)
+_call28:FindFirstChild('FaDhenModernMini'):Destroy()
+_call28:FindFirstChild('Cmdr'):Destroy()
+
+local _call137 = Instance.new('ScreenGui')
+
+_call137.Name = 'Cmdr'
+_call137.ResetOnSpawn = false
+_call137.Parent = _call28
+
+local _call139 = Instance.new('Frame')
+
+_call139.Size = UDim2.new(0, 200, 0, 195)
+_call139.Position = UDim2.new(0.5, -100, 0.5, -97)
+_call139.BackgroundColor3 = Color3.fromRGB(38, 42, 56)
+_call139.Active = true
+_call139.Draggable = true
+_call139.Visible = false
+_call139.Parent = _call137
+
+local _call145 = Instance.new('UICorner', _call139)
+
+_call145.CornerRadius = UDim.new(0, 12)
+
+local _call149 = Instance.new('UIStroke')
+
+_call149.Thickness = 2
+_call149.Color = _call10
+_call149.Transparency = 0.15
+_call149.Parent = _call139
+
+local _call151 = Instance.new('ImageLabel')
+
+_call151.AnchorPoint = Vector2.new(0.5, 0.5)
+_call151.Position = UDim2.new(0.5, 0, 0.5, 0)
+_call151.Size = UDim2.new(1, 36, 1, 36)
+_call151.ZIndex = 0
+_call151.BackgroundTransparency = 1
+_call151.Image = 'rbxassetid://5028857084'
+_call151.ImageColor3 = Color3.new(0, 0, 0)
+_call151.ImageTransparency = 0.55
+_call151.ScaleType = Enum.ScaleType.Slice
+_call151.SliceCenter = Rect.new(24, 24, 276, 276)
+_call151.Parent = _call139
+
+local _call165 = Instance.new('TextLabel')
+
+_call165.Size = UDim2.new(1, 0, 0, 32)
+_call165.BackgroundColor3 = _call10
+_call165.Text = '  Scriptblox 9871'
+_call165.Font = Enum.Font.GothamBold
+_call165.TextSize = 14
+_call165.TextXAlignment = Enum.TextXAlignment.Left
+_call165.TextColor3 = Color3.fromRGB(255, 255, 255)
+_call165.Parent = _call139
+
+local _call173 = Instance.new('UICorner', _call165)
+
+_call173.CornerRadius = UDim.new(0, 12)
+
+local _call177 = Instance.new('UIGradient')
+local _call185 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, _call10),
+    [2] = ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 60, 255)),
+})
+
+_call177.Color = _call185
+_call177.Rotation = 80
+_call177.Parent = _call165
+
+local _call187 = Instance.new('Frame')
+
+_call187.Position = UDim2.new(0, 10, 0, 38)
+_call187.Size = UDim2.new(1, -20, 1, -48)
+_call187.BackgroundTransparency = 1
+_call187.Parent = _call139
+
+local _call193 = Instance.new('Frame')
+
+_call193.Name = 'MainTab'
+_call193.Size = UDim2.new(1, 0, 1, 0)
+_call193.BackgroundTransparency = 1
+_call193.Visible = true
+_call193.Parent = _call187
+
+local _call197 = Instance.new('UIListLayout')
+
+_call197.Padding = UDim.new(0, 6)
+_call197.VerticalAlignment = Enum.VerticalAlignment.Top
+_call197.HorizontalAlignment = Enum.HorizontalAlignment.Center
+_call197.SortOrder = Enum.SortOrder.LayoutOrder
+_call197.Parent = _call193
+
+local _call207 = Instance.new('TextLabel')
+
+_call207.Size = UDim2.new(1, -10, 0, 16)
+_call207.Position = UDim2.new(0, 5, 0, 2)
+_call207.BackgroundTransparency = 1
+_call207.Text = 'FAKE BALANCE'
+_call207.TextColor3 = Color3.fromRGB(115, 100, 150)
+_call207.Font = Enum.Font.GothamBold
+_call207.TextSize = 10
+_call207.TextXAlignment = Enum.TextXAlignment.Left
+_call207.LayoutOrder = 1
+_call207.Parent = _call193
+
+local _call219 = Instance.new('TextBox')
+
+_call219.Size = UDim2.new(1, -10, 0, 32)
+_call219.Position = UDim2.new(0, 5, 0, 20)
+_call219.BackgroundColor3 = Color3.fromRGB(20, 18, 30)
+_call219.Text = '76,345,714'
+_call219.TextColor3 = Color3.fromRGB(220, 215, 240)
+_call219.Font = Enum.Font.Gotham
+_call219.TextSize = 13
+_call219.PlaceholderText = 'Enter balance...'
+_call219.PlaceholderColor3 = Color3.fromRGB(80, 72, 108)
+_call219.ClearTextOnFocus = false
+_call219.LayoutOrder = 2
+_call219.Parent = _call193
+
+local _call233 = Instance.new('UICorner', _call219)
+
+_call233.CornerRadius = UDim.new(0, 9)
+
+local _call237 = Instance.new('UIStroke', _call219)
+
+_call237.Color = Color3.fromRGB(45, 40, 68)
+_call237.Thickness = 1
+
+_call219.Focused:Connect(function()
+    local _call247 = _call30:Create(_call237, TweenInfo.new(0.15), {
+        Color = _call10,
+        Thickness = 1.5,
+    })
+
+    _call247:Play()
+end)
+_call219.FocusLost:Connect(function()
+    local _call259 = _call30:Create(_call237, TweenInfo.new(0.15), {
+        Color = Color3.fromRGB(45, 40, 68),
+        Thickness = 1,
+    })
+
+    _call259:Play()
+end)
+
+local _call263 = Instance.new('TextButton')
+
+_call263.Size = UDim2.new(1, -10, 0, 32)
+_call263.Position = UDim2.new(0, 5, 0, 56)
+_call263.BackgroundColor3 = Color3.fromRGB(88, 66, 188)
+_call263.Text = 'Apply Changes'
+_call263.TextColor3 = Color3.new(1, 1, 1)
+_call263.Font = Enum.Font.GothamBold
+_call263.TextSize = 13
+_call263.AutoButtonColor = false
+_call263.LayoutOrder = 3
+_call263.Parent = _call193
+
+local _call275 = Instance.new('UICorner', _call263)
+
+_call275.CornerRadius = UDim.new(0, 10)
+
+_call263.MouseEnter:Connect(function()
+    local _call287 = _call30:Create(_call263, TweenInfo.new(0.13), {
+        BackgroundColor3 = Color3.fromRGB(108, 86, 210),
+    })
+
+    _call287:Play()
+end)
+_call263.MouseLeave:Connect(function()
+    local _call299 = _call30:Create(_call263, TweenInfo.new(0.13), {
+        BackgroundColor3 = Color3.fromRGB(88, 66, 188),
+    })
+
+    _call299:Play()
+end)
+_call263.MouseButton1Click:Connect(function()
+    type(_call219.Text)
+
+    local _call312 = _call30:Create(_call263, TweenInfo.new(0.12), {
+        BackgroundColor3 = Color3.fromRGB(255, 80, 80),
+    })
+
+    _call312:Play()
+
+    _call263.Text = 'Invalid!'
+
+    task.delay(1, function()
+        local _call323 = _call30:Create(_call263, TweenInfo.new(0.18), {
+            BackgroundColor3 = Color3.fromRGB(88, 66, 188),
+        })
+
+        _call323:Play()
+
+        _call263.Text = 'Apply Changes'
+    end)
+end)
+_call32.InputBegan:Connect(function(_329, _329_2) end)
+
+local _call331 = Instance.new('ImageButton', _call137)
+
+_call331.Size = UDim2.new(0, 55, 0, 55)
+_call331.Position = UDim2.new(0, 10, 0.2, 0)
+_call331.Image = 'rbxassetid://88985860242479'
+_call331.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+_call331.BackgroundTransparency = 0.7
+_call331.Active = true
+_call331.Draggable = true
+
+local _call339 = Instance.new('UICorner', _call331)
+
+_call339.CornerRadius = UDim.new(0, 9)
+
+local _call343 = Instance.new('UIStroke')
+
+_call343.Thickness = 2
+_call343.Color = Color3.fromRGB(255, 255, 255)
+_call343.Transparency = 0.3
+_call343.Parent = _call331
+
+_call331.MouseEnter:Connect(function()
+    local _call355 = _call30:Create(_call331, TweenInfo.new(0.15), {
+        Size = UDim2.new(0, 60, 0, 60),
+    })
+
+    _call355:Play()
+end)
+_call331.MouseLeave:Connect(function()
+    local _call367 = _call30:Create(_call331, TweenInfo.new(0.15), {
+        Size = UDim2.new(0, 55, 0, 55),
+    })
+
+    _call367:Play()
+end)
+_call331.MouseButton1Click:Connect(function()
+    _call139.Visible = true
+end)
+
+local _call375 = Instance.new('ScreenGui')
+
+_call375.Name = 'GhemsHUB'
+_call375.ResetOnSpawn = false
+_call375.IgnoreGuiInset = true
+_call375.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+_call375.DisplayOrder = 10000
+_call375.Parent = _call28
+
+local _call379 = Instance.new('Frame')
+
+_call379.Size = UDim2.new(1, 0, 1, 0)
+_call379.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+_call379.BorderSizePixel = 0
+_call379.Parent = _call375
+
+local _call385 = Instance.new('Frame')
+
+_call385.Size = UDim2.fromOffset(380, 230)
+_call385.Position = UDim2.fromScale(0.5, 0.55)
+_call385.AnchorPoint = Vector2.new(0.5, 0.5)
+_call385.BackgroundColor3 = Color3.fromRGB(20, 21, 26)
+_call385.BorderSizePixel = 0
+_call385.BackgroundTransparency = 1
+_call385.Parent = _call379
+
+local _call395 = Instance.new('UICorner', _call385)
+
+_call395.CornerRadius = UDim.new(0, 16)
+
+local _call399 = Instance.new('UIStroke')
+
+_call399.Color = _call10
+_call399.Transparency = 1
+_call399.Thickness = 2
+_call399.Parent = _call385
+
+local _call401 = Instance.new('Frame')
+
+_call401.Size = UDim2.new(1, 0, 0, 4)
+_call401.Position = UDim2.new(0, 0, 0, 0)
+_call401.BackgroundColor3 = _call10
+_call401.BorderSizePixel = 0
+_call401.BackgroundTransparency = 1
+_call401.Parent = _call385
+
+local _call407 = Instance.new('UICorner', _call401)
+
+_call407.CornerRadius = UDim.new(0, 16)
+
+local _call411 = Instance.new('UIGradient')
+local _call419 = ColorSequence.new({
+    [1] = ColorSequenceKeypoint.new(0, _call10),
+    [2] = ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 60, 255)),
+})
+
+_call411.Color = _call419
+_call411.Parent = _call401
+
+local _call421 = Instance.new('TextLabel')
+
+_call421.Size = UDim2.new(1, -20, 0, 40)
+_call421.Position = UDim2.new(0, 10, 0, 14)
+_call421.BackgroundTransparency = 1
+_call421.Text = 'made by Ghems'
+_call421.TextColor3 = Color3.fromRGB(255, 255, 255)
+_call421.TextSize = 28
+_call421.Font = Enum.Font.GothamBold
+_call421.TextXAlignment = Enum.TextXAlignment.Center
+_call421.TextTransparency = 1
+_call421.Parent = _call385
+
+local _call433 = Instance.new('TextLabel')
+
+_call433.Size = UDim2.new(1, -20, 0, 36)
+_call433.Position = UDim2.new(0, 10, 0, 56)
+_call433.BackgroundTransparency = 1
+_call433.Text = 'Shop Keybind = K'
+_call433.TextColor3 = _call10
+_call433.TextSize = 22
+_call433.Font = Enum.Font.GothamBold
+_call433.TextXAlignment = Enum.TextXAlignment.Center
+_call433.TextTransparency = 1
+_call433.Parent = _call385
+
+local _call443 = Instance.new('TextLabel')
+
+_call443.Size = UDim2.new(1, -20, 0, 20)
+_call443.Position = UDim2.new(0, 10, 0, 100)
+_call443.BackgroundTransparency = 1
+_call443.Text = 'GhemsHUB'
+_call443.TextColor3 = _call10
+_call443.TextSize = 14
+_call443.Font = Enum.Font.GothamMedium
+_call443.TextXAlignment = Enum.TextXAlignment.Center
+_call443.TextTransparency = 1
+_call443.Parent = _call385
+
+local _call453 = Instance.new('TextLabel')
+
+_call453.Size = UDim2.new(1, -20, 0, 18)
+_call453.Position = UDim2.new(0, 10, 0, 160)
+_call453.BackgroundTransparency = 1
+_call453.Text = 'loading...'
+_call453.TextColor3 = Color3.fromRGB(120, 120, 140)
+_call453.TextSize = 12
+_call453.Font = Enum.Font.Gotham
+_call453.TextXAlignment = Enum.TextXAlignment.Center
+_call453.TextTransparency = 1
+_call453.Parent = _call385
+
+local _call473 = _call30:Create(_call385, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0,
+    Position = UDim2.fromScale(0.5, 0.5),
+})
+
+_call473:Play()
+
+local _call479 = _call30:Create(_call399, TweenInfo.new(0.5), {Transparency = 0.2})
+
+_call479:Play()
+
+local _call485 = _call30:Create(_call401, TweenInfo.new(0.5), {BackgroundTransparency = 0})
+
+_call485:Play()
+task.delay(0.3, function()
+    local _call494 = _call30:Create(_call421, TweenInfo.new(0.4), {TextTransparency = 0})
+
+    _call494:Play()
+end)
+task.delay(0.5, function()
+    local _call503 = _call30:Create(_call433, TweenInfo.new(0.4), {TextTransparency = 0})
+
+    _call503:Play()
+end)
+task.delay(0.7, function()
+    local _call512 = _call30:Create(_call443, TweenInfo.new(0.4), {TextTransparency = 0})
+
+    _call512:Play()
+end)
+task.delay(0.9, function()
+    local _call521 = _call30:Create(_call453, TweenInfo.new(0.4), {TextTransparency = 0})
+
+    _call521:Play()
+end)
+task.delay(2, function()
+    _call453.Text = 'ready!'
+
+    local _call532 = _call30:Create(_call453, TweenInfo.new(0.2), {
+        TextColor3 = Color3.fromRGB(0, 255, 120),
+    })
+
+    _call532:Play()
+end)
+task.delay(3, function()
+    local _call541 = _call30:Create(_call453, TweenInfo.new(0.3), {TextTransparency = 1})
+
+    _call541:Play()
+
+    local _call547 = _call30:Create(_call443, TweenInfo.new(0.3), {TextTransparency = 1})
+
+    _call547:Play()
+end)
+task.delay(3.2, function()
+    local _call556 = _call30:Create(_call433, TweenInfo.new(0.3), {TextTransparency = 1})
+
+    _call556:Play()
+end)
+task.delay(3.5, function()
+    local _call565 = _call30:Create(_call421, TweenInfo.new(0.3), {TextTransparency = 1})
+
+    _call565:Play()
+end)
+task.delay(3.8, function()
+    local _call574 = _call30:Create(_call399, TweenInfo.new(0.3), {Transparency = 1})
+
+    _call574:Play()
+
+    local _call580 = _call30:Create(_call401, TweenInfo.new(0.3), {BackgroundTransparency = 1})
+
+    _call580:Play()
+
+    local _call592 = _call30:Create(_call385, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromScale(0.5, 0.4),
+    })
+
+    _call592:Play()
+end)
+task.delay(4.2, function()
+    local _call601 = _call30:Create(_call379, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+
+    _call601:Play()
+end)
+task.delay(4.6, function()
+    _call375:Destroy()
+end)
+
+return nil
